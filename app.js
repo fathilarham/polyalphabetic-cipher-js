@@ -12,11 +12,14 @@ $(document).ready(function () {
             $('#keyCopy').hide()
             $('#finalKey').html('')
         } else {
-            $('#keyCopy').show()
             key = $('#encKey').val()
-            final_key = Array.from(generateKey(key))
-            $('#finalKey').html('Key Post Processing : ' + final_key.join(''))
+            if ($('#encPhrase').val().length != 0) {
+                $('#keyCopy').show()
+                final_key = Array.from(generateKey(key, phrase))
+                $('#finalKey').html('Key Post Processing : ' + final_key.join(''))
+            }
         }
+
     })
 
     $('#encPhrase').keyup(function () {
@@ -24,17 +27,16 @@ $(document).ready(function () {
             $('#encResult').val('')
             $('#resultCopy').hide()
         } else {
-            $('#resultCopy').show()
             phrase = $('#encPhrase').val()
+            key = $('#encKey').val()
+
+            final_key = Array.from(generateKey(key, phrase))
+            $('#finalKey').html('Key Post Processing : ' + final_key.join(''))
+            $('#keyCopy').show()
+
+            $('#resultCopy').show()
             encrypted_phrase = encrypt(phrase, final_key)
             $('#encResult').val(encrypted_phrase.join(''))
-        }
-    })
-
-    $('#decKey').keyup(function () {
-        if ($('#decKey').val().length != 0) {
-            key = $('#decKey').val()
-            final_key = Array.from(generateKey(key))
         }
     })
 
@@ -43,6 +45,8 @@ $(document).ready(function () {
             $('#decResult').val('')
         } else {
             phrase = $('#decPhrase').val()
+            key = $('#decKey').val()
+            final_key = Array.from(generateKey(key, phrase))
             decrypted_phrase = decrypt(phrase, final_key)
             $('#decResult').val(decrypted_phrase.join(''))
         }
@@ -67,10 +71,15 @@ $(document).ready(function () {
     // Encrypt Process Function
     function encrypt(phrase, final_key) {
         let array_phrase = Array.from(phrase)
+        let array_key = Array.from(final_key)
 
         array_phrase.forEach(function (character, key) {
             if (toAsci(character) != -64) {
-                array_phrase[key] = final_key[toAsci(character) - 1]
+                let phrase_asci = toAsci(array_phrase[key])
+                let key_asci = toAsci(array_key[key])
+                let char_add = (phrase_asci + key_asci) % 26
+                array_phrase[key] = toChar(char_add)
+                // console.log((phrase_asci + key_asci) % 26)
             }
         })
 
@@ -80,14 +89,14 @@ $(document).ready(function () {
     // Encrypt Process Function
     function decrypt(phrase, final_key) {
         let array_phrase = Array.from(phrase)
-        let alphabet = 'abcdefghijklmnopqrstuvwxyz'
-        alphabet = Array.from(alphabet)
-        let index
+        let array_key = Array.from(final_key)
 
         array_phrase.forEach(function (character, key) {
             if (toAsci(character) != -64) {
-                index = final_key.indexOf(character)
-                array_phrase[key] = alphabet[index]
+                let phrase_asci = toAsci(array_phrase[key])
+                let key_asci = toAsci(array_key[key])
+                let char_add = (phrase_asci - key_asci + 26) % 26
+                array_phrase[key] = toChar(char_add)
             }
         })
 
@@ -95,30 +104,27 @@ $(document).ready(function () {
     }
 
     // Key Process Function
-    function generateKey(key) {
+    function generateKey(key, phrase) {
         // Remove space between words
-        let unique_key = Array.from(key.replace(/\s+/g, '').toLowerCase())
+        key = key.replace(/\s+/g, '').toLowerCase()
+        let add_key = ''
+        let final_key
 
-        // Create Set Var to remove same characters in string
-        let set = new Set()
-
-        unique_key.forEach(function (character) {
-            // Add each character to Set datatype
-            set.add(character)
-        })
-
-        unique_key = Array.from(set)
-
-        let alphabet = 'abcdefghijklmnopqrstuvxyz'
-
-        unique_key.forEach(function (character) {
-            alphabet = alphabet.replace(character, '')
-        })
-
-        let add_key = Array.from(alphabet)
-
-        let final_key = unique_key.join('') + add_key.join('')
-
+        if (key.length > phrase.length) {
+            final_key = key.slice(0, phrase.length)
+        } else {
+            let n = 0
+            for (let index = 0; index < phrase.length - key.length; index++) {
+                add_key = add_key + key[n]
+                /// Configure N for Key
+                if (n == key.length - 1) {
+                    n = 0
+                } else {
+                    n = n + 1
+                }
+            }
+            final_key = key + add_key
+        }
         return final_key
     }
 
@@ -146,6 +152,11 @@ $(document).ready(function () {
     // Transform Char to ASCI Function
     function toAsci(char) {
         return char.charCodeAt() - 96
+    }
+
+    // Transform ASCI to Char Function
+    function toChar(asci) {
+        return String.fromCharCode(asci + 96)
     }
 
 });
