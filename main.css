@@ -1,0 +1,26 @@
+.card {
+    width: 500px;
+    height: 580px;
+    /* align-content: center; */
+    margin: auto;
+    margin-top: 50px;
+    margin-bottom: 50px;
+    border-radius: 25px;
+    background: #ffffff;
+    box-shadow:  18px 18px 25px #d9d9d9, 
+    -18px -18px 25px #ffffff;
+    border: none;
+}
+
+.card-header {
+    padding: 1.5rem 1.25rem;
+    background-color: rgba(0, 0, 0, 0);
+}
+
+.btn-primary {
+    width: -webkit-fill-available;
+}
+body {
+    background-color: #ffffff;
+}
+
